@@ -1,12 +1,68 @@
-# Complete Project Fix and Validation Task
+# Complete Data Deduplicator Project Creation, Fix Implementation, and Full Validation
 
-## Objective
+## Role & Objective
 
-You are tasked with analyzing, fixing, and fully validating a problematic Python project. This is a comprehensive task that requires you to:
-1. Analyze the existing buggy project
-2. Create a complete fixed version in a new directory
-3. Execute full validation to confirm all fixes work correctly
-4. Provide a detailed validation report
+You are a senior software engineer tasked with creating a complete fixed Data Deduplicator project and executing comprehensive validation including before/after comparison. Your objectives are:
+
+1. **Create the fixed project** under `C:\BugBash\workSpace1\oswe-mini-m23a2s165\v-kaelincai_25_12_25_case1` with both `fixed_project` and `issue_project` directories
+2. **Implement deterministic deduplication** (convert set to sorted list conversion)
+3. **Execute comprehensive validation** covering environment setup, test execution, multi-process determinism verification, and before/after comparison
+4. **Demonstrate the fix** by showing original project fails (flaky behavior) and fixed project passes (100% deterministic)
+
+---
+
+## Inputs & Context
+
+### Source Project (Flaky Data Deduplicator)
+
+The original `issue_project/flaky_deduplicator/` contains:
+- **Core Problem**: Returns Python `set` object for unique IDs, causing non-deterministic iteration order
+- **Manifestation**: Same input produces different output across runs; flaky tests randomly fail
+- **Root Cause**: `deduplicate_records()` returns `seen_ids` as set; iteration order undefined by PYTHONHASHSEED
+- **Cascading Effect**: Non-deterministic summary strings → non-deterministic report IDs (MD5 hash of summary)
+
+### Expected Non-Determinism in Original Project
+- Multi-process summary outputs differ randomly:
+  - Run 1: `"Unique IDs: 3, 1, 2"`
+  - Run 2: `"Unique IDs: 3, 2, 1"`
+  - Run 3: `"Unique IDs: 1, 2, 3"`
+- Test results: 1 failed (flaky test), 6 passed, 1 xfailed
+- Failure reason: `test_summary_generation` expects `"Unique IDs: 1, 2, 3"` but gets random ordering
+
+### Expected Determinism in Fixed Project
+- All multi-process runs produce identical output:
+  - Run 1-6: `"Unique IDs: 1, 2, 3"` (always the same, alphabetically sorted)
+- Test results: All tests passed (100%)
+- Report IDs: Always identical for same input (`"RPT-5fc8b6c1"`)
+
+### Original Project Structure to Replicate
+
+```
+issue_project/
+└── flaky_deduplicator/
+    ├── README.md
+    ├── KNOWN_ISSUE.md
+    ├── requirements.txt (pytest>=7.4.0)
+    ├── pytest.ini
+    ├── data/sample_data.csv
+    ├── src/deduplicator/
+    │   ├── __init__.py
+    │   ├── deduplicator.py (buggy - returns set)
+    │   └── reporter.py (buggy - uses set iteration)
+    └── tests/test_deduplicator.py
+```
+
+### The Critical Fix
+
+**Buggy version (in deduplicator.py):**
+```python
+return unique_records, seen_ids  # Returns unordered set
+```
+
+**Fixed version:**
+```python
+return unique_records, sorted(seen_ids)  # Returns sorted list (deterministic)
+```
 
 ---
 
@@ -205,12 +261,23 @@ The task is considered complete ONLY when:
 
 ---
 
-## Instructions
+## Step-by-Step Instructions
 
-Please proceed to:
-1. Analyze the issue_project thoroughly
-2. Create the fixed_project with all necessary corrections
-3. Execute the full validation process
-4. Provide the complete validation report with explicit pass/fail status
+### PHASE 1: Create Project Structure
+Create both `issue_project` and `fixed_project` directories under `C:\BugBash\workSpace1\oswe-mini-m23a2s165\v-kaelincai_25_12_25_case1\`
 
-Begin now.
+### PHASE 2: Implement Fix
+Apply deterministic fix: `return unique_records, sorted(seen_ids)` in deduplicator.py
+
+### PHASE 3: Execute Tests
+- Run original project tests (expect 1 failed, showing flaky behavior)
+- Run fixed project tests (expect all pass)
+- Run 3 consecutive full test suites
+- Run multi-process tests with 6 separate processes
+- Run with PYTHONHASHSEED variations
+
+### PHASE 4: Generate Validation Report
+Provide comprehensive report with explicit confirmation:
+- ✅ All automated tests in the fixed project passed
+- ✅ Deterministic output confirmed
+- ✅ Project is production-ready
